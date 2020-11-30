@@ -3,10 +3,11 @@ from urllib.request import urlopen
 from link_finder import linkfinder
 from general import *
 
+
 class spider:
-    
-    #class variables shared among all instances
-    
+
+    # class variables shared among all instances
+
     project_name = ''
     base_url = ''
     domain_name = ''
@@ -23,39 +24,40 @@ class spider:
         spider.crawled_file = spider.project_name + '/crawled.txt'
         self.boot()
         self.crawl_page('first spider', spider.base_url)
-        
+
     @staticmethod
     def boot():
         create_dir(spider.project_name)
         create_data_files(spider.project_name, spider.base_url)
         spider.queue = file_to_set(spider.queue_file)
         spider.crawled = file_to_set(spider.crawled_file)
-    
+
     @staticmethod
     def crawl_page(thread_name, page_url):
         if page_url not in spider.crawled:
             print(thread_name + ' now crawling ' + page_url)
-            print('Queued ' + str(len(spider.queue)) + ' | Crawled ' +  str(len(spider.crawled)))
+            print('Queued ' + str(len(spider.queue)) +
+                  ' | Crawled ' + str(len(spider.crawled)))
             spider.add_links_to_queue(spider.gather_links(page_url))
             spider.queue.remove(page_url)
             spider.crawled.add(page_url)
             spider.update_files()
-            
+
     @staticmethod
     def gather_links(page_url):
-        html_string = ''
-        try:
-            response = urlopen(page_url)
-            if response.getheader('content type') == 'text/html':
-                html_bytes = response.read()
-                html_string = html_bytes.decode('utf-8')
-            finder = linkfinder(spider.base_url, page_url)
-            finder.feed(html_string)
-        except:
-            print('error: cannot crawl page')
-            return set()
+        # html_string = ''
+
+        #     response = urlopen(page_url)
+        #     if response.getheader('content type') == 'text/html':
+        #         html_bytes = response.read()
+        #         html_string = html_bytes.decode('utf-8')
+        finder = linkfinder(spider.base_url, page_url)
+        finder.extract_links()
+    # except:
+    #     print('error: cannot crawl page')
+    #     return set()
         return finder.page_links()
-        
+
     @staticmethod
     def add_links_to_queue(links):
         for url in links:
@@ -66,9 +68,8 @@ class spider:
             if spider.domain_name not in url:
                 continue
             spider.queue.add(url)
-            
+
     @staticmethod
     def update_files():
         set_to_file(spider.queue, spider.queue_file)
         set_to_file(spider.crawled, spider.crawled_file)
-        
